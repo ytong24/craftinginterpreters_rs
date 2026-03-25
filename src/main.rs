@@ -1,7 +1,11 @@
-use std::{io::{self, Write}, path::PathBuf};
+mod error;
 
-use anyhow::{Context, Result};
+use std::io::{self, Write};
+use std::path::PathBuf;
+
 use clap::Parser;
+
+use crate::error::LoxError;
 
 #[derive(Parser)]
 #[command(name = "loxrs", about = "A Lox language interpreter")]
@@ -10,19 +14,12 @@ struct Cli {
     file: Option<PathBuf>,
 }
 
-fn run(source: &str) {
+fn run(_source: &str) -> Result<(), LoxError> {
     // Stub: will be replaced with scanning, parsing, and interpreting
-    println!("{source}");
-}
-
-fn run_file(path: &PathBuf) -> Result<()> {
-    let source = std::fs::read_to_string(path)
-        .with_context(|| format!("could not read file '{path:?}'"))?;
-    run(&source);
     Ok(())
 }
 
-fn run_prompt() -> Result<()> {
+fn run_prompt() -> io::Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
     let mut line = String::new();
@@ -34,10 +31,12 @@ fn run_prompt() -> Result<()> {
         line.clear();
         let bytes_read = stdin.read_line(&mut line)?;
         if bytes_read == 0 {
-            break; // EOF
+            break;
         }
 
-        run(line.trim());
+        if let Err(e) = run(line.trim()) {
+            eprintln!("{e}");
+        }
     }
 
     Ok(())
@@ -48,9 +47,16 @@ fn main() {
 
     match cli.file {
         Some(path) => {
-            if let Err(e) = run_file(&path) {
+            let source = match std::fs::read_to_string(&path) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("Could not read file '{}': {e}", path.display());
+                    std::process::exit(1);
+                }
+            };
+            if let Err(e) = run(&source) {
                 eprintln!("{e}");
-                std::process::exit(1);
+                std::process::exit(e.exit_code());
             }
         }
         None => {
