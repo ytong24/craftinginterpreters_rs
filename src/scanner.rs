@@ -2,6 +2,40 @@ use crate::error::CompileError;
 use crate::error::CompileErrorKind;
 use crate::token::{Token, TokenKind};
 
+fn is_alpha(s: &str) -> bool {
+    s.as_bytes()
+        .first()
+        .is_some_and(|b| b.is_ascii_alphabetic() || *b == b'_')
+}
+
+fn is_alphanumeric(s: &str) -> bool {
+    s.as_bytes()
+        .first()
+        .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'_')
+}
+
+fn keyword_kind(lexeme: &str) -> Option<TokenKind> {
+    match lexeme {
+        "and" => Some(TokenKind::And),
+        "class" => Some(TokenKind::Class),
+        "else" => Some(TokenKind::Else),
+        "false" => Some(TokenKind::False),
+        "for" => Some(TokenKind::For),
+        "fun" => Some(TokenKind::Fun),
+        "if" => Some(TokenKind::If),
+        "nil" => Some(TokenKind::Nil),
+        "or" => Some(TokenKind::Or),
+        "print" => Some(TokenKind::Print),
+        "return" => Some(TokenKind::Return),
+        "super" => Some(TokenKind::Super),
+        "this" => Some(TokenKind::This),
+        "true" => Some(TokenKind::True),
+        "var" => Some(TokenKind::Var),
+        "while" => Some(TokenKind::While),
+        _ => None,
+    }
+}
+
 fn is_ascii_digit(s: &str) -> bool {
     // Safe to use `s.as_bytes().first()` because peek()/peek_next() always return either "" or a single UTF-8 character.
     // ASCII digits are single-byte (0x30–0x39), so checking the first byte is sufficient.
@@ -131,6 +165,15 @@ impl<'src> Scanner<'src> {
         });
     }
 
+    fn identifier(&mut self) {
+        while is_alphanumeric(self.peek()) {
+            self.advance();
+        }
+        let lexeme = self.lexeme();
+        let kind = keyword_kind(lexeme).unwrap_or(TokenKind::Identifier);
+        self.add_token(kind, lexeme);
+    }
+
     fn scan_token(&mut self) {
         self.advance();
         let lexeme = self.lexeme();
@@ -184,19 +227,28 @@ impl<'src> Scanner<'src> {
                     self.add_token(TokenKind::Less, lexeme);
                 }
             }
+
             "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => self.number(),
+
             "\"" => self.string(),
+
             " " | "\r" | "\t" => {}
+
             "\n" => {
                 self.line += 1;
                 self.column = 0;
             }
+
             other => {
-                let c = other.chars().next().unwrap();
-                self.errors.push(CompileError {
-                    line: self.line,
-                    kind: CompileErrorKind::UnexpectedCharacter(c),
-                });
+                if is_alpha(other) {
+                    self.identifier();
+                } else {
+                    let c = other.chars().next().unwrap();
+                    self.errors.push(CompileError {
+                        line: self.line,
+                        kind: CompileErrorKind::UnexpectedCharacter(c),
+                    });
+                }
             }
         }
     }
