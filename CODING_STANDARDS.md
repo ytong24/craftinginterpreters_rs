@@ -43,11 +43,13 @@
 - **Justify non-obvious safety assumptions.** When code relies on an invariant (like `peek()` always returning a single UTF-8 char or `""`), explain why the assumption holds and why it can't be violated.
 - **Don't delete existing useful comments** when adding new ones nearby.
 - **Don't over-describe.** If the code is self-evident, no comment needed. Only comment where the logic isn't obvious or where a future reader might question a design choice.
+- **Document design choices in code.** When a decision was made between alternatives (e.g., dedicated enums vs reusing an existing type), the rationale belongs as a comment at the definition site.
 
 ### General
 
 - No over-engineering. Don't create abstractions for one-time operations. Three similar lines are better than a premature helper.
 - Code should be precise, not clever. Favor clarity and correctness.
+- **Correct by construction.** At pipeline boundaries (scanner → parser → interpreter), the producer validates and encodes invariants in the types so consumers can trust the structure. The AST is a semantic representation, not a syntactic reshuffling — e.g., operators use dedicated enums (not raw tokens), literals store parsed values, grouping drops parentheses.
 
 ## Part 2: Project-Specific (Lox Interpreter)
 
