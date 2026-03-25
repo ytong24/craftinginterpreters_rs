@@ -66,7 +66,17 @@ impl<'src> Scanner<'src> {
             "-" => self.add_token(TokenKind::Minus, lexeme),
             "+" => self.add_token(TokenKind::Plus, lexeme),
             ";" => self.add_token(TokenKind::Semicolon, lexeme),
-            "/" => self.add_token(TokenKind::Slash, lexeme),
+            "/" => {
+                if self.match_next("/") {
+                    // Line comment: consume until newline (leave '\n' for the next iteration
+                    // so it still increments self.line).
+                    while self.peek() != "\n" && !self.is_at_end() {
+                        self.advance();
+                    }
+                } else {
+                    self.add_token(TokenKind::Slash, lexeme);
+                }
+            }
             "*" => self.add_token(TokenKind::Star, lexeme),
             "!" => {
                 if self.match_next("=") {
