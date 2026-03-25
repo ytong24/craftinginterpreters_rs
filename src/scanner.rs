@@ -2,6 +2,13 @@ use crate::error::CompileError;
 use crate::error::CompileErrorKind;
 use crate::token::{Token, TokenKind};
 
+fn is_ascii_digit(s: &str) -> bool {
+    // Safe to use `s.as_bytes().first()` because peek()/peek_next() always return either "" or a single UTF-8 character.
+    // ASCII digits are single-byte (0x30–0x39), so checking the first byte is sufficient.
+    // Multi-byte characters have first byte >= 0x80, which is_ascii_digit() rejects.
+    s.as_bytes().first().is_some_and(|b| b.is_ascii_digit())
+}
+
 pub struct Scanner<'src> {
     source: &'src str,
     tokens: Vec<Token<'src>>,
@@ -31,6 +38,19 @@ impl<'src> Scanner<'src> {
         &self.source[self.current..self.current + c.len_utf8()]
     }
 
+    /// Two-character lookahead. Unlike `peek()` which returns the character at
+    /// `self.current`, this returns the character *after* it — needed to check
+    /// what follows a "." without consuming it.
+    fn peek_next(&self) -> &'src str {
+        let first = self.source[self.current..].chars().next();
+        let next_start = self.current + first.map_or(0, |c| c.len_utf8());
+        if next_start >= self.source.len() {
+            return "";
+        }
+        let next = self.source[next_start..].chars().next().unwrap();
+        &self.source[next_start..next_start + next.len_utf8()]
+    }
+
     fn match_next(&mut self, expected: &str) -> bool {
         if self.peek() != expected {
             return false;
@@ -51,6 +71,24 @@ impl<'src> Scanner<'src> {
             column: self.column - (self.current - self.start),
             length: self.current - self.start,
         });
+    }
+
+    fn number(&mut self) {
+        while is_ascii_digit(self.peek()) {
+            self.advance();
+        }
+
+        // Fractional part: consume "." only if followed by a digit.
+        if self.peek() == "." && is_ascii_digit(self.peek_next()) {
+            self.advance();
+            while is_ascii_digit(self.peek()) {
+                self.advance();
+            }
+        }
+
+        let lexeme = self.lexeme();
+        let value: f64 = lexeme.parse().unwrap();
+        self.add_token(TokenKind::Number(value), lexeme);
     }
 
     fn string(&mut self) {
@@ -82,7 +120,7 @@ impl<'src> Scanner<'src> {
 
         // Manual push instead of add_token() because add_token() computes the starting
         // column as `self.column - token_len`, which underflows for multi-line strings.
-        // E.g. "ab\ncd" — after the closing ", self.column is 3 but the token spans 8 bytes, so 3 - 8 overflows. 
+        // E.g. "ab\ncd" — after the closing ", self.column is 3 but the token spans 8 bytes, so 3 - 8 overflows.
         // Only strings can span lines; other tokens are safe.
         self.tokens.push(Token {
             kind: TokenKind::Str,
@@ -146,6 +184,7 @@ impl<'src> Scanner<'src> {
                     self.add_token(TokenKind::Less, lexeme);
                 }
             }
+            "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => self.number(),
             "\"" => self.string(),
             " " | "\r" | "\t" => {}
             "\n" => {
