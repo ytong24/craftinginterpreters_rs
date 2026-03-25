@@ -23,6 +23,22 @@ impl<'src> Scanner<'src> {
         self.column += 1;
     }
 
+    fn peek(&self) -> &'src str {
+        if self.is_at_end() {
+            return "";
+        }
+        let c = self.source[self.current..].chars().next().unwrap();
+        &self.source[self.current..self.current + c.len_utf8()]
+    }
+
+    fn match_next(&mut self, expected: &str) -> bool {
+        if self.peek() != expected {
+            return false;
+        }
+        self.advance();
+        true
+    }
+
     fn lexeme(&self) -> &'src str {
         &self.source[self.start..self.current]
     }
@@ -52,6 +68,34 @@ impl<'src> Scanner<'src> {
             ";" => self.add_token(TokenKind::Semicolon, lexeme),
             "/" => self.add_token(TokenKind::Slash, lexeme),
             "*" => self.add_token(TokenKind::Star, lexeme),
+            "!" => {
+                if self.match_next("=") {
+                    self.add_token(TokenKind::BangEqual, self.lexeme());
+                } else {
+                    self.add_token(TokenKind::Bang, lexeme);
+                }
+            }
+            "=" => {
+                if self.match_next("=") {
+                    self.add_token(TokenKind::EqualEqual, self.lexeme());
+                } else {
+                    self.add_token(TokenKind::Equal, lexeme);
+                }
+            }
+            ">" => {
+                if self.match_next("=") {
+                    self.add_token(TokenKind::GreaterEqual, self.lexeme());
+                } else {
+                    self.add_token(TokenKind::Greater, lexeme);
+                }
+            }
+            "<" => {
+                if self.match_next("=") {
+                    self.add_token(TokenKind::LessEqual, self.lexeme());
+                } else {
+                    self.add_token(TokenKind::Less, lexeme);
+                }
+            }
             " " | "\r" | "\t" => {}
             "\n" => {
                 self.line += 1;
