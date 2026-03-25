@@ -53,6 +53,46 @@ impl<'src> Scanner<'src> {
         });
     }
 
+    fn string(&mut self) {
+        // Save the token's starting position before consuming across lines.
+        let start_line = self.line;
+        let start_column = self.column - (self.current - self.start);
+
+        while self.peek() != "\"" && !self.is_at_end() {
+            if self.peek() == "\n" {
+                self.line += 1;
+                self.column = 0;
+            }
+            self.advance();
+        }
+
+        if self.is_at_end() {
+            self.errors.push(CompileError {
+                line: self.line,
+                kind: CompileErrorKind::UnterminatedString,
+            });
+            return;
+        }
+
+        // Consume the closing "
+        self.advance();
+
+        // Lexeme excludes the surrounding quotes.
+        let lexeme = &self.source[self.start + 1..self.current - 1];
+
+        // Manual push instead of add_token() because add_token() computes the starting
+        // column as `self.column - token_len`, which underflows for multi-line strings.
+        // E.g. "ab\ncd" — after the closing ", self.column is 3 but the token spans 8 bytes, so 3 - 8 overflows. 
+        // Only strings can span lines; other tokens are safe.
+        self.tokens.push(Token {
+            kind: TokenKind::Str,
+            lexeme,
+            line: start_line,
+            column: start_column,
+            length: self.current - self.start,
+        });
+    }
+
     fn scan_token(&mut self) {
         self.advance();
         let lexeme = self.lexeme();
@@ -106,6 +146,7 @@ impl<'src> Scanner<'src> {
                     self.add_token(TokenKind::Less, lexeme);
                 }
             }
+            "\"" => self.string(),
             " " | "\r" | "\t" => {}
             "\n" => {
                 self.line += 1;
