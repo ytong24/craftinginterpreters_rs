@@ -1,11 +1,10 @@
 mod error;
-
-use std::io::{self, Write};
-use std::path::PathBuf;
-
-use clap::Parser;
+mod token;
 
 use crate::error::LoxError;
+use clap::Parser;
+use std::io::{self, Write};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "loxrs", about = "A Lox language interpreter")]
