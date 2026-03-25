@@ -29,6 +29,12 @@
 - Don't add dependencies unless they earn their place. Prefer manual impls when they give more control (e.g. manual `Display` over `thiserror` when exact format strings matter).
 - If a dependency is no longer used, remove it immediately.
 
+### Visibility
+
+- **Default to minimal visibility.** Think carefully about every `pub` — limit scope to avoid unnecessary information leakage.
+- **But don't add boilerplate for its own sake.** If a struct is a plain data type with no invariants to protect, `pub` fields are better than private fields with getter/setter/constructor boilerplate. The justification must be explicit: no invariants, no encapsulation benefit.
+- In a binary crate, `pub` and `pub(crate)` are functionally identical — prefer `pub` to avoid visual noise when there are no external consumers.
+
 ### General
 
 - No over-engineering. Don't create abstractions for one-time operations. Three similar lines are better than a premature helper.
