@@ -36,6 +36,14 @@
 - **But don't add boilerplate for its own sake.** If a struct is a plain data type with no invariants to protect, `pub` fields are better than private fields with getter/setter/constructor boilerplate. The justification must be explicit: no invariants, no encapsulation benefit.
 - In a binary crate, `pub` and `pub(crate)` are functionally identical — prefer `pub` to avoid visual noise when there are no external consumers.
 
+### Comments
+
+- **Explain the *why* and the *risk*, not the *what*.** Don't describe what the code does — describe why it's written this way and what would go wrong otherwise.
+- **Use concrete examples with specific values.** "Underflows for multi-line strings" is vague. `"ab\ncd" — self.column is 3 but the token spans 8 bytes, so 3 - 8 overflows` is convincing.
+- **Justify non-obvious safety assumptions.** When code relies on an invariant (like `peek()` always returning a single UTF-8 char or `""`), explain why the assumption holds and why it can't be violated.
+- **Don't delete existing useful comments** when adding new ones nearby.
+- **Don't over-describe.** If the code is self-evident, no comment needed. Only comment where the logic isn't obvious or where a future reader might question a design choice.
+
 ### General
 
 - No over-engineering. Don't create abstractions for one-time operations. Three similar lines are better than a premature helper.
