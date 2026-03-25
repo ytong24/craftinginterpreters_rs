@@ -1,7 +1,9 @@
 mod error;
+mod scanner;
 mod token;
 
 use crate::error::LoxError;
+use crate::scanner::Scanner;
 use clap::Parser;
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -13,8 +15,9 @@ struct Cli {
     file: Option<PathBuf>,
 }
 
-fn run(_source: &str) -> Result<(), LoxError> {
-    // Stub: will be replaced with scanning, parsing, and interpreting
+fn run(source: &str) -> Result<(), LoxError> {
+    let scanner = Scanner::new(source);
+    let _tokens = scanner.scan_tokens().map_err(LoxError::Compile)?;
     Ok(())
 }
 

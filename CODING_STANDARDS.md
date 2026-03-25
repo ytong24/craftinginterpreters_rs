@@ -10,8 +10,9 @@
 
 ### Data & Ownership
 
-- **Borrow, don't allocate.** When data is a slice of an existing owned string, use `&'src str` instead of `String`. If the source lives long enough, downstream types should borrow from it, not clone.
+- **Borrow, don't allocate.** When data is a slice of an existing owned string, use `&'src str` instead of `String`. If the source lives long enough, downstream types should borrow from it, not clone. Prefer `&str` slices over `char` when the data naturally lives as part of a larger string — `char` is a copy that breaks the borrowing chain.
 - **No redundant storage.** Don't carry data in enum variants when it's trivially derivable from another field. Only store data when it's a fundamentally different representation (e.g. `Number(f64)` vs the lexeme text).
+- **Compute once, pass explicitly.** If a value is needed in multiple places, compute it once, store it in a local, and pass it where needed. Don't re-derive the same value by calling the same method again — even if cheap, it obscures data flow and creates a dependency that's easy to break silently.
 
 ### File & Code Organization
 
