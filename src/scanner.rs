@@ -149,8 +149,7 @@ impl<'src> Scanner<'src> {
         // Consume the closing "
         self.advance();
 
-        // Lexeme excludes the surrounding quotes.
-        let lexeme = &self.source[self.start + 1..self.current - 1];
+        let lexeme = self.lexeme();
 
         // Manual push instead of add_token() because add_token() computes the starting
         // column as `self.column - token_len`, which underflows for multi-line strings.

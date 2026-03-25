@@ -17,7 +17,10 @@ struct Cli {
 
 fn run(source: &str) -> Result<(), LoxError> {
     let scanner = Scanner::new(source);
-    let _tokens = scanner.scan_tokens().map_err(LoxError::Compile)?;
+    let tokens = scanner.scan_tokens().map_err(LoxError::Compile)?;
+    for token in &tokens {
+        println!("{token}");
+    }
     Ok(())
 }
 
