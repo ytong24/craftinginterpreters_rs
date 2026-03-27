@@ -6,6 +6,9 @@ INTERPRETER="$SCRIPT_DIR/target/release/craftinginterpreters_rs"
 
 # Ordered list of jlox chapter suites (each is cumulative, but we run all
 # up to the selected chapter to catch regressions with stricter earlier suites).
+# SUITE_ARGS maps each suite to the --mode flag the interpreter needs.
+# Earlier chapters stop the pipeline early (tokenize, parse); later chapters
+# run the full interpreter (no --mode flag).
 SUITES=(
   "chap04_scanning"
   "chap06_parsing"
@@ -17,6 +20,19 @@ SUITES=(
   "chap12_classes"
   "chap13_inheritance"
   "jlox"
+)
+
+SUITE_ARGS=(
+  "--mode tokenize"   # chap04_scanning
+  "--mode parse"      # chap06_parsing
+  ""                  # chap07_evaluating
+  ""                  # chap08_statements
+  ""                  # chap09_control
+  ""                  # chap10_functions
+  ""                  # chap11_resolving
+  ""                  # chap12_classes
+  ""                  # chap13_inheritance
+  ""                  # jlox
 )
 
 LABELS=(
@@ -62,7 +78,18 @@ for i in $(seq 0 "$selected"); do
   echo "========================================"
   echo "  Running: $label ($suite)"
   echo "========================================"
-  if ! dart tool/bin/test.dart --interpreter "$INTERPRETER" "$suite"; then
+  args="${SUITE_ARGS[$i]}"
+  if [[ -n "$args" ]]; then
+    # -a is a multi-option: each token needs its own -a flag
+    dart_args=(--interpreter "$INTERPRETER")
+    for arg in $args; do
+      dart_args+=(-a "$arg")
+    done
+    dart_args+=("$suite")
+  else
+    dart_args=(--interpreter "$INTERPRETER" "$suite")
+  fi
+  if ! dart tool/bin/test.dart "${dart_args[@]}"; then
     any_failed=1
   fi
 done
