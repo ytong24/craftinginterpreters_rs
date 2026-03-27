@@ -102,7 +102,7 @@ impl fmt::Display for TokenKind {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token<'src> {
     pub kind: TokenKind,
     pub lexeme: &'src str,

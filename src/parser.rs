@@ -43,12 +43,14 @@ impl<'src> Parser<'src> {
         self.previous()
     }
 
+    // `consume` expects an exact token (e.g., RightParen after a grouping),
+    // so plain `==` via PartialEq is correct. `consume` is never called with payload-carrying variants.
     fn consume(
         &mut self,
         kind: TokenKind,
         message: &'static str,
     ) -> Result<&Token<'src>, CompileError> {
-        if std::mem::discriminant(&self.peek().kind) == std::mem::discriminant(&kind) {
+        if self.peek().kind == kind {
             Ok(self.advance())
         } else {
             Err(self.error_at_current(message))

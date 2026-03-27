@@ -24,6 +24,7 @@ use std::fmt;
 ///
 /// Recursive children are `Box`ed because Rust enums are sized inline — without
 /// indirection, `Expr` would be infinitely large.
+#[derive(Debug)]
 pub enum Expr<'src> {
     Literal(LiteralValue<'src>),
     Unary {
@@ -48,11 +49,13 @@ pub enum Expr<'src> {
 // construction: every operator position holds a valid operator, and consumers
 // get exhaustive matching with no `_ => unreachable!()` fallback arms.
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnaryOp {
     Negate, // -
     Not,    // !
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BinaryOp {
     Equal,
     NotEqual,
@@ -75,6 +78,7 @@ pub enum BinaryOp {
 /// `Str` borrows from the source string — the scanner's lexeme includes quotes
 /// (`"hello"`), but `&lexeme[1..len-1]` is still a valid slice into the original
 /// source. Zero allocations.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LiteralValue<'src> {
     Number(f64),
     Str(&'src str),

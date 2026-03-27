@@ -7,6 +7,7 @@
 - Use precise, domain-appropriate types. `PathBuf` for paths, enums over booleans, newtypes where they add clarity. Never use `String` or `i32` when a more specific type exists.
 - Match types to their consumers — e.g. `exit_code()` returns `i32` because `std::process::exit` takes `i32`. Don't use a narrower type that forces casts at every call site.
 - Return types must accurately describe what can go wrong. `io::Result<()>` if only I/O can fail. Don't use `anyhow::Result` to erase type information.
+- **Derive day-one traits on every type.** Derive everything that is both *true* (the type supports it) and *useful* (realistic use case exists). Small value types (operator enums, literal values) should be `Copy + Clone + Debug + PartialEq` (+ `Eq` if no `f64`). Larger structs should get at least `Debug` and `Clone` if all fields support it. Error types need `Debug` + manual `Display`. Don't derive speculatively — `Hash` or `Eq` without a use case is noise.
 
 ### Data & Ownership
 
