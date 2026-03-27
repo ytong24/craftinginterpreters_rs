@@ -1,15 +1,17 @@
-mod error;
 mod ast;
+mod error;
+mod parser;
 mod scanner;
 mod token;
 
 use crate::error::LoxError;
+use crate::parser::Parser;
 use crate::scanner::Scanner;
-use clap::Parser;
+use clap::Parser as ClapParser;
 use std::io::{self, Write};
 use std::path::PathBuf;
 
-#[derive(Parser)]
+#[derive(ClapParser)]
 #[command(name = "loxrs", about = "A Lox language interpreter")]
 struct Cli {
     /// Path to a Lox script to execute
@@ -19,9 +21,9 @@ struct Cli {
 fn run(source: &str) -> Result<(), LoxError> {
     let scanner = Scanner::new(source);
     let tokens = scanner.scan_tokens().map_err(LoxError::Compile)?;
-    for token in &tokens {
-        println!("{token}");
-    }
+    let parser = Parser::new(&tokens);
+    let expr = parser.parse().map_err(LoxError::Compile)?;
+    println!("{expr}");
     Ok(())
 }
 

@@ -5,7 +5,7 @@ use std::fmt;
 /// Most variants are unit variants — their textual content is captured by
 /// `Token::lexeme`. Only `Number` carries a parsed payload because a binary
 /// `f64` is a fundamentally different representation than the source text.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TokenKind {
     // Single-character tokens
     LeftParen,

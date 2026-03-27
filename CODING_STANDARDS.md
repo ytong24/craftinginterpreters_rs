@@ -49,6 +49,7 @@
 
 - No over-engineering. Don't create abstractions for one-time operations. Three similar lines are better than a premature helper.
 - Code should be precise, not clever. Favor clarity and correctness.
+- **Prefer idiomatic Rust.** Use Rust's own idioms (`matches!`, `if let`, `?` operator, iterator methods) over patterns ported from other languages. When the language provides a built-in way, use it.
 - **Correct by construction.** At pipeline boundaries (scanner → parser → interpreter), the producer validates and encodes invariants in the types so consumers can trust the structure. The AST is a semantic representation, not a syntactic reshuffling — e.g., operators use dedicated enums (not raw tokens), literals store parsed values, grouping drops parentheses.
 
 ## Part 2: Project-Specific (Lox Interpreter)

@@ -54,6 +54,8 @@ pub enum CompileErrorKind {
     // Scanning errors
     UnexpectedCharacter(char),
     UnterminatedString,
+    // Parsing errors
+    ParseError { at: String, message: &'static str },
 }
 
 impl fmt::Display for CompileError {
@@ -70,6 +72,9 @@ impl fmt::Display for CompileErrorKind {
             }
             CompileErrorKind::UnterminatedString => {
                 write!(f, "Error: Unterminated string.")
+            }
+            CompileErrorKind::ParseError { at, message } => {
+                write!(f, "Error at {at}: {message}")
             }
         }
     }
